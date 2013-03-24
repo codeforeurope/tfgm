@@ -31,7 +31,7 @@ import org.xml.sax.helpers.DefaultHandler;
 public class Convert {
 	
 	//CONFIGURATION STARTS
-	static final String sourceFileLocation = "c:\\temp\\temp\\test_single.kml";
+	static final String sourceFileLocation = "c:\\temp\\temp\\OpenData_BusRoutes_clean.KML";
 	static final String routesFileLocation = "c:\\temp\\temp\\routes.txt";
 	static final String shapesFileLocation = "c:\\temp\\temp\\shapes.txt";
 	static final String tripsCurrentFileLocation = "c:\\temp\\temp\\trips.txt";
@@ -39,6 +39,7 @@ public class Convert {
 	static final String coordinateSeparator = " ";
 	static final boolean generateFiles = true;
 	static final boolean kmlLngBeforeLat = true;
+	static final int firstSoManyShapesOnly = -1;
 	//CONFIGURATION ENDS
 	
 	static HashMap<String, String> shapes;
@@ -135,7 +136,7 @@ public class Convert {
 							innerList.add(new Point(Double.parseDouble(pairItem[0]),Double.parseDouble(pairItem[1])));
 					}
 					//if(innerList.size()>3)
-						coordinatesValue.add(innerList);
+					coordinatesValue.add(innerList);
 				}
 				coordinates = false;
 			}
@@ -163,13 +164,17 @@ public class Convert {
 	           StringBuffer shapesText = new StringBuffer();
 	           shapesText.append("shape_id,shape_pt_lat,shape_pt_lon,shape_pt_sequence\n");
 	           int sequence = 1;
+	           int shapeCount = 0;
 	           for(String key : shapes.keySet()){
-	        	   shapeIds.put(routes.get(key),routes.get(key)+"_shap");
-	        	   for(String pair : shapes.get(key).split(" ")){
-	        		   String[] latLng = pair.split(",");
-	        		   shapesText.append(routes.get(key)+"_shap,"+latLng[0]+","+latLng[1]+","+sequence+"\n");
-	        		   sequence++;
+	        	   if(firstSoManyShapesOnly==-1 || shapeCount<firstSoManyShapesOnly){
+		        	   shapeIds.put(routes.get(key),routes.get(key)+"_shap");
+		        	   for(String pair : shapes.get(key).split(" ")){
+		        		   String[] latLng = pair.split(",");
+		        		   shapesText.append(routes.get(key)+"_shap,"+latLng[0]+","+latLng[1]+","+sequence+"\n");
+		        		   sequence++;
+		        	   }
 	        	   }
+	        	   shapeCount++;
 	           }
 	           FileWriter fstream = new FileWriter(shapesFileLocation);
 	           BufferedWriter out = new BufferedWriter(fstream);
@@ -219,11 +224,13 @@ public class Convert {
 		for(ArrayList<Point> list : coordinatesValue){
 			String forwardString = "";
 			String reverseString = "";
-			for(Point point : list)
-				forwardString += point.getLng()+","+point.getLat()+" ";
+			//for(Point point : list)
+			//	forwardString += point.getLng()+","+point.getLat()+" ";
+			forwardString = list.get(0).getLng()+","+list.get(0).getLat()+" "+list.get(list.size()-1).getLng()+","+list.get(list.size()-1).getLat();
 			Collections.reverse(list);
-			for(Point point : list)
-				reverseString += point.getLng()+","+point.getLat()+" ";
+			//for(Point point : list)
+			//	reverseString += point.getLng()+","+point.getLat()+" ";
+			reverseString = list.get(0).getLng()+","+list.get(0).getLat()+" "+list.get(list.size()-1).getLng()+","+list.get(list.size()-1).getLat();
 			if(indexHash.get(forwardString)==null && indexHash.get(reverseString)==null){
 				indexHash.put(forwardString, new Integer(index));
 				indexHash.put(reverseString, new Integer(index));
